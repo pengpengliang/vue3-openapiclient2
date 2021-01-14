@@ -1,9 +1,42 @@
+/*
+ * @Date: 2021-01-13 11:27:42
+ * @Author: liangzhanpeng
+ * @LastEditors: liangzhanpeng
+ */
 import { createApp } from "vue";
 import App from "./App.vue";
 import router from "./router";
 import store from "./store";
+import ElementPlus from "element-plus";
+import svgPlugin from "./plugins/svg";
+import axios from "@/request/http.js";
+import "element-plus/lib/theme-chalk/index.css";
 
-createApp(App)
-  .use(store)
-  .use(router)
-  .mount("#app");
+console.log(store.state.hasToken)
+if (!store.state.hasToken && location.pathname !== "/") {
+  axios.get("http:///47.106.120.152:8080/apigateway/openapiservice/user/authenticatedCheck").then(res=>{
+    console.log(res)
+    store.commit('changeToken',true)
+  }).catch(error=>{
+    store.commit('changeToken',false)
+    console.log(error)
+  })
+}
+// if (location.pathname !== "/login") {
+//   axios.get("http:///47.106.120.152:8080/apigateway/openapiservice/user/authenticatedCheck").then(res=>{
+//     console.log(res)
+//   }).catch(error=>{
+//     console.log(error)
+//   })
+// }
+
+const app = createApp(App);
+  app.config.globalProperties.axios = axios;
+  app.use(store);
+  app.use(router);
+  app.use(ElementPlus);
+  app.use(svgPlugin, {
+    imports: []
+  });
+  app.mount("#app");
+
