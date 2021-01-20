@@ -72,6 +72,8 @@
 <script>
 import { computed, reactive } from "vue";
 import { useRouter } from "vue-router";
+import api from "@/api/index.js";
+import config from "@/utils/config";
 export default {
   setup() {
     const router = useRouter();
@@ -88,13 +90,20 @@ export default {
     });
 
     const submitForm = () => {
-      console.log("提交");
-      router.push({
-        path: '/market'
-      })
+      api.login.login(state.form).then(res => {
+        if (res.data.ReturnCode == 0) {
+          state.form.user = "";
+          state.form.password = "";
+          router.push({
+            path: "/center"
+          });
+        } else {
+          api.toast(res.data.Message || "登录失败", "error");
+        }
+      });
     };
     const systemName = computed(() => {
-      return "国土空间基础信息平台-共享交换系统";
+      return config.systemName;
     });
     return {
       state,

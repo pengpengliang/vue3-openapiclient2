@@ -11,7 +11,6 @@ export default createStore({
   },
   mutations: {
     changeToken(state,bool){
-      console.log(bool)
       state.hasToken = bool
     }
   },
