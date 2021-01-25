@@ -19,7 +19,7 @@
       <div class="login_form">
         <h2>用户登录</h2>
         <el-form
-          ref="form"
+          ref="formRef"
           :model="state.form"
           label-width="0px"
           :rules="state.rules"
@@ -70,12 +70,13 @@
 </template>
 
 <script>
-import { computed, reactive } from "vue";
+import { computed, reactive, ref, unref } from "vue";
 import { useRouter } from "vue-router";
 import api from "@/api/index.js";
 import config from "@/utils/config";
 export default {
   setup() {
+    const formRef = ref(null);
     const router = useRouter();
     const state = reactive({
       form: {
@@ -90,15 +91,26 @@ export default {
     });
 
     const submitForm = () => {
-      api.login.login(state.form).then(res => {
-        if (res.data.ReturnCode == 0) {
-          state.form.user = "";
-          state.form.password = "";
-          router.push({
-            path: "/center"
+      const form = unref(formRef);
+      if (!form) {
+        return;
+      }
+      form.validate(valid => {
+        if (valid) {
+          api.login.login(state.form).then(res => {
+            if (res.data.ReturnCode == 0) {
+              state.form.user = "";
+              state.form.password = "";
+              router.push({
+                path: "/center"
+              });
+            } else {
+              api.toast(res.data.Message || "登录失败", "error");
+            }
           });
         } else {
-          api.toast(res.data.Message || "登录失败", "error");
+          console.log("error submit!!");
+          return false;
         }
       });
     };
@@ -108,7 +120,8 @@ export default {
     return {
       state,
       submitForm,
-      systemName
+      systemName,
+      formRef
     };
   }
 };
