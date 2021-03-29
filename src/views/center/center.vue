@@ -9,40 +9,56 @@
     <div class="personalCenter">
       <div class="personalCenterList">
         <ul>
-          <li :class="[{'active': moduleName == 'regList'}]" @click="changeModule('regList')">
-            <i class="el-icon-document-add" style="margin-right:8px"></i>
+          <li
+            :class="[{ active: moduleName == 'regList' }]"
+            @click="changeModule('regList')"
+          >
+            <i class="el-icon-document-add" style="margin-right: 8px"></i>
             <span>注册列表</span>
           </li>
-          <li :class="[{'active': moduleName == 'applyList'}]" @click="changeModule('applyList')">
-            <svg-icon name="apply" size="14" style="margin-right:8px" :color="`${moduleName == 'applyList'?'#fff':'#000'}`"></svg-icon>
+          <li
+            :class="[{ active: moduleName == 'applyList' }]"
+            @click="changeModule('applyList')"
+          >
+            <svg-icon
+              name="apply"
+              size="14"
+              style="margin-right: 8px"
+              :color="`${moduleName == 'applyList' ? '#fff' : '#000'}`"
+            ></svg-icon>
             <span>申请列表</span>
           </li>
-          <li :class="[{'active': moduleName == 'approvalList'}]" @click="changeModule('approvalList')">
+          <li
+            :class="[{ active: moduleName == 'approvalList' }]"
+            @click="changeModule('approvalList')"
+          >
             <svg-icon
               name="approvalTable"
               size="14"
-              style="margin-right:8px"
-              :color="`${moduleName == 'approvalList'?'#fff':'#000'}`"
+              style="margin-right: 8px"
+              :color="`${moduleName == 'approvalList' ? '#fff' : '#000'}`"
             ></svg-icon>
             <span>审批列表</span>
           </li>
-          <li :class="[{'active': moduleName == 'approvalRecord'}]" @click="changeModule('approvalRecord')">
+          <li
+            :class="[{ active: moduleName == 'approvalRecord' }]"
+            @click="changeModule('approvalRecord')"
+          >
             <svg-icon
               name="approvalRecord"
               size="14"
-              style="margin-right:8px"
-              :color="`${moduleName == 'approvalRecord'?'#fff':'#000'}`"
+              style="margin-right: 8px"
+              :color="`${moduleName == 'approvalRecord' ? '#fff' : '#000'}`"
             ></svg-icon>
             <span>审批记录</span>
           </li>
         </ul>
       </div>
       <div class="personalCenterContent">
-        <div v-show="moduleName === 'regList'">注册列表</div>
+        <RegList v-show="moduleName === 'regList'"></RegList>
         <div v-show="moduleName === 'applyList'">申请列表</div>
         <div v-show="moduleName === 'approvalList'">审批列表</div>
         <div v-show="moduleName === 'approvalRecord'">审批记录</div>
-
       </div>
     </div>
   </div>
@@ -50,13 +66,14 @@
 
 <script>
 import Header from "@/components/header";
-import { ref } from 'vue';
+import RegList from "./regList/index"
+import { ref } from "vue";
 export default {
   setup() {
-    const moduleName = ref("regList")
-    const changeModule = (name) => {
-      moduleName.value = name
-    }
+    const moduleName = ref("regList");
+    const changeModule = name => {
+      moduleName.value = name;
+    };
     return {
       changeModule,
       moduleName
@@ -64,7 +81,8 @@ export default {
   },
   components: {
     Header,
-  },
+    RegList
+  }
 };
 </script>
 

@@ -10,6 +10,8 @@ import store from "./store";
 import ElementPlus from "element-plus";
 import svgPlugin from "./plugins/svg";
 import axios from "@/utils/http.js";
+import 'dayjs/locale/zh-cn'
+import locale from 'element-plus/lib/locale/lang/zh-cn'
 import "element-plus/lib/theme-chalk/index.css";
 
 if (!store.state.hasToken && location.pathname !== "/") {
@@ -28,7 +30,7 @@ if (!store.state.hasToken && location.pathname !== "/") {
 const app = createApp(App);
 app.use(store);
 app.use(router);
-app.use(ElementPlus);
+app.use(ElementPlus,{ locale });
 app.use(svgPlugin, {
   imports: []
 });
