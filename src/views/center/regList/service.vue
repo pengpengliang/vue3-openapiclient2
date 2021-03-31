@@ -141,6 +141,16 @@ import {
 
 import api from "@/api/index.js";
 export default {
+  props: {
+    timeData: {
+      type: Array,
+      default: ()=>[]
+    },
+    searchData: {
+      type: String,
+      default: ''
+    },
+  },
   setup(props) {
     console.log(props);
     const state = reactive({
@@ -163,24 +173,38 @@ export default {
         pagesize: state.pagesize,
       };
       const serviceTheme = await api.center.getResourceTree(); //服务主题数据
-      const myResourcesData = await api.center.getMyResources(obj); //列表数据
       state.serviceTheme = serviceTheme;
-      state.tableData = myResourcesData.objects;
-      state.total = myResourcesData.count;
+      getMyResources(obj)
     });
     // watch([props.timeData, props.searchData], ([newfoo, newbar], [prevfoo, prevbar]) => {
 
     // })
+    const getMyResources = async (params) => {
+      const myResourcesData = await api.center.getMyResources(params); //列表数据
+      state.tableData = myResourcesData.objects;
+      state.total = myResourcesData.count;
+    }
     const methods = {
       handleRowClick() {},
-      handleServiceThemeFilter(value, row, column) {
-        console.log(value, row, column);
+      handleServiceThemeFilter(value) {
+        if (state.selectedServiceTheme == value) {
+          return;
+        }
+        state.selectedServiceTheme = value;
+        let obj = {
+          resourcetreeid: value,
+          pageindex: 1,
+          pagesize: state.pagesize,
+          name: props.searchData
+        }
+        getMyResources(obj)
+        console.log(obj);
       },
-      handlePublishStatusFilter(value, row, column) {
-        console.log(value, row, column);
+      handlePublishStatusFilter(value) {
+        console.log(value);
       },
-      handleAuditStatusFilter(value, row, column) {
-        console.log(value, row, column);
+      handleAuditStatusFilter(value) {
+        console.log(value);
       },
       update() {},
       start() {},
@@ -194,14 +218,17 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-  ::v-deep {
+.serviceStatus{
+::v-deep {
     .el-table-filter {
       .el-table-filter__list {
-        height: 300px;
+        height: 50px;
         overflow: auto;
       }
     }
   }
+}
+
 
 .mapTable {
   .regMapTable {
