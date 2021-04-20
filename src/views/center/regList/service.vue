@@ -11,6 +11,7 @@
       stripe
       style="width: 100%"
       @row-click="handleRowClick"
+      @filter-change="filterChange"
     >
       <el-table-column
         prop="index"
@@ -25,6 +26,7 @@
         :filters="serviceTheme"
         :filter-multiple="false"
         :filter-method="handleServiceThemeFilter"
+        column-key="theme"
       ></el-table-column>
       <el-table-column prop="registerdate" label="注册时间"></el-table-column>
       <el-table-column prop="username" label="注册人"></el-table-column>
@@ -34,6 +36,7 @@
         :filter-multiple="false"
         :filter-method="handlePublishStatusFilter"
         :class-name="'serviceStatus'"
+        column-key="service"
       >
         <template #default="scope">
           <span style="margin-left: 10px">{{
@@ -46,6 +49,7 @@
         :filters="auditStatus"
         :filter-multiple="false"
         :filter-method="handleAuditStatusFilter"
+        column-key="audit"
       >
         <template #default="scope">
           <span style="margin-left: 10px">{{
@@ -70,10 +74,10 @@
             class="operation-button"
             v-if="
               (scope.row.curactid === 'A005' || scope.row.curactid == null) &&
-              scope.row.usemapproxy == 1 &&
-              scope.row.isshared !== 3 &&
-              scope.row.isshared !== 2 &&
-              scope.row.usemapproxy == 1
+                scope.row.usemapproxy == 1 &&
+                scope.row.isshared !== 3 &&
+                scope.row.isshared !== 2 &&
+                scope.row.usemapproxy == 1
             "
             @click.stop.prevent="update(scope.$index, tableData)"
             type="text"
@@ -84,7 +88,7 @@
             class="operation-button"
             v-if="
               (scope.row.curactid === 'A005' || scope.row.curactid == null) &&
-              (scope.row.isshared === 1 || scope.row.isshared === 4)
+                (scope.row.isshared === 1 || scope.row.isshared === 4)
             "
             @click.stop.prevent="start(scope.$index, tableData)"
             type="text"
@@ -98,8 +102,8 @@
             class="operation-button"
             v-if="
               (scope.row.curactid !== 'A003' || scope.row.curactid == null) &&
-              scope.row.isshared !== 2 &&
-              scope.row.isshared !== 3
+                scope.row.isshared !== 2 &&
+                scope.row.isshared !== 3
             "
             @click.stop.prevent="deleteRow(scope.$index, tableData)"
             type="text"
@@ -131,7 +135,8 @@
 </template>
 
 <script>
-import { onMounted, reactive, toRefs } from "vue";
+import { onMounted, reactive, toRefs, watch } from "vue";
+import { ElMessageBox } from "element-plus";
 import {
   getAuditStatus,
   auditStatus,
@@ -144,15 +149,14 @@ export default {
   props: {
     timeData: {
       type: Array,
-      default: ()=>[]
+      default: () => [],
     },
     searchData: {
       type: String,
-      default: ''
+      default: "",
     },
   },
   setup(props) {
-    console.log(props);
     const state = reactive({
       tableData: [],
       serviceTheme: [], //服务主题数据
@@ -163,54 +167,143 @@ export default {
       selectedApproveStatus: null, //选中的审批状态
       pageindex: 1,
       pagesize: 10,
-      total: 10,
+      total: 0,
     });
     onMounted(async () => {
       let obj = {
-        // starttime: 2021 / 03 / 01,
-        // endtime: 2021 / 03 / 02,
         pageindex: state.pageindex,
         pagesize: state.pagesize,
       };
       const serviceTheme = await api.center.getResourceTree(); //服务主题数据
       state.serviceTheme = serviceTheme;
-      getMyResources(obj)
+      getMyResources(obj);
     });
-    // watch([props.timeData, props.searchData], ([newfoo, newbar], [prevfoo, prevbar]) => {
-
-    // })
+    watch(
+      [() => props.timeData, () => props.searchData],
+      ([newTime, newSearch]) => {
+        let obj = {
+          isshared: state.selectedServiceStatus,
+          resourcetreeid: state.selectedServiceTheme,
+          curactid: state.selectedApproveStatus,
+          pageindex: 1,
+          pagesize: state.pagesize,
+          name: newSearch,
+          starttime: newTime && newTime.length > 0 ? newTime[0] : null,
+          endtime: newTime && newTime.length > 0 ? newTime[1] : null,
+        };
+        getMyResources(obj);
+      }
+    );
     const getMyResources = async (params) => {
       const myResourcesData = await api.center.getMyResources(params); //列表数据
       state.tableData = myResourcesData.objects;
       state.total = myResourcesData.count;
-    }
+    };
     const methods = {
-      handleRowClick() {},
-      handleServiceThemeFilter(value) {
-        if (state.selectedServiceTheme == value) {
-          return;
+      filterChange(filters) {
+        state.pageindex = 1;
+        if (filters.service) {
+          state.selectedServiceStatus = filters.service[0]
+            ? filters.service[0]
+            : null;
+        } else if (filters.theme) {
+          state.selectedServiceTheme = filters.theme[0]
+            ? filters.theme[0]
+            : null;
+        } else if (filters.audit) {
+          state.selectedApproveStatus = filters.audit[0]
+            ? filters.audit[0]
+            : null;
         }
-        state.selectedServiceTheme = value;
         let obj = {
-          resourcetreeid: value,
+          isshared: filters.service
+            ? filters.service[0]
+            : state.selectedServiceStatus,
+          resourcetreeid: filters.theme
+            ? filters.theme[0]
+            : state.selectedServiceTheme,
+          curactid: filters.audit
+            ? filters.audit[0]
+            : state.selectedApproveStatus,
           pageindex: 1,
           pagesize: state.pagesize,
-          name: props.searchData
-        }
-        getMyResources(obj)
-        console.log(obj);
+          name: props.searchData,
+          starttime:
+            props.timeData && props.timeData.length > 0
+              ? props.timeData[0]
+              : null,
+          endtime:
+            props.timeData && props.timeData.length > 0
+              ? props.timeData[1]
+              : null,
+        };
+        getMyResources(obj);
       },
-      handlePublishStatusFilter(value) {
-        console.log(value);
+      handleRowClick() {
+        console.log(123);
       },
-      handleAuditStatusFilter(value) {
-        console.log(value);
+      handleServiceThemeFilter() {
+        return true;
+      },
+      handlePublishStatusFilter() {
+        return true;
+      },
+      handleAuditStatusFilter() {
+        return true;
       },
       update() {},
-      start() {},
-      deleteRow() {},
+      async start(index, rows) {
+        let operation = rows[index].isshared === 4 ? "启用" : "停用";
+        let data = {
+          resourceId: rows[index].resourceid
+        };
+        await api.center.changeIsShared(data,operation);
+        let obj = {
+          pageindex: 1,
+          pagesize: state.pagesize,
+        };
+        state.pageindex = 1;
+        getMyResources(obj);
+      },
+      deleteRow(index, rows) {
+        ElMessageBox.confirm("是否要删除该服务？", "确认信息", {
+          distinguishCancelAndClose: true,
+          confirmButtonText: "是",
+          cancelButtonText: "否",
+        }).then(async () => {
+          let data = {
+            resourceid: rows[index].resourceid,
+          };
+          await api.center.deleteResource(data);
+          let obj = {
+            pageindex: 1,
+            pagesize: state.pagesize,
+          };
+          state.pageindex = 1;
+          getMyResources(obj);
+        });
+      },
       updateResources() {},
-      handleCurrentChange() {},
+      handleCurrentChange(currentPage) {
+        state.pageindex = currentPage;
+        let obj = {
+          isshared: state.selectedServiceStatus,
+          resourcetreeid: state.selectedServiceTheme,
+          curactid: state.selectedApproveStatus,
+          pageindex: currentPage,
+          pagesize: state.pagesize,
+          name: props.searchData,
+          starttime:
+            props.timeData && props.timeData.length > 0
+              ? props.timeData[0]
+              : null,
+          endtime:
+            props.timeData && props.timeData.length > 0
+              ? props.timeData[1]
+              : null,
+        };
+        getMyResources(obj);
+      },
     };
     return { ...toRefs(state), ...methods, getAuditStatus, getPublishStatus };
   },
@@ -218,8 +311,8 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.serviceStatus{
-::v-deep {
+.serviceStatus {
+  ::v-deep {
     .el-table-filter {
       .el-table-filter__list {
         height: 50px;
@@ -228,7 +321,6 @@ export default {
     }
   }
 }
-
 
 .mapTable {
   .regMapTable {

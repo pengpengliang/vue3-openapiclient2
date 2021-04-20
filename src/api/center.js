@@ -62,11 +62,57 @@ const center = {
         if (res.data.ReturnCode == 0) {
           let datas = res.data.Data;
           datas.objects.forEach((item, index) => {
-            item.index = (datas.pageIndex - 1) * datas.recordNum + index + 1;
+            item.index = (datas.pageIndex - 1) * params.pagesize + index + 1;
           });
           resolve(datas);
         } else {
           toast(res.data.Message || "获取“我注册的地图服务列表”失败", "error");
+          reject();
+        }
+      });
+    });
+    return promise;
+  },
+  //删除地图服务
+  deleteResource(params) {
+    let promise = new Promise((resolve, reject) => {
+      let url = config.webRoot + `/project/deleteResource`;
+      axios({
+        url: url,
+        method: "post",
+        data: params,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }).then((res) => {
+        if (res.data.ReturnCode == 0) {
+          resolve();
+          toast("删除服务成功", "success");
+        } else {
+          toast(res.data.Message || "删除服务失败", "error");
+          reject();
+        }
+      });
+    });
+    return promise;
+  },
+  //停用或启用地图服务
+  changeIsShared(params,operation) {
+    let promise = new Promise((resolve, reject) => {
+      let url = config.webRoot + `/project/changeIsShared`;
+      axios({
+        url: url,
+        method: "get",
+        params: params,
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded"
+        }
+      }).then((res) => {
+        if (res.data.ReturnCode == 0) {
+          resolve();
+          toast("已" + operation + "服务", "success");
+        } else {
+          toast(res.data.Message || operation + "服务失败", "error");
           reject();
         }
       });

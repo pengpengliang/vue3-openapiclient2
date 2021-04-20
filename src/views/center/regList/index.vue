@@ -33,6 +33,7 @@ export default {
       state.moduleName = moduleName
     };
     const changeSearchValue = (val) => {
+      console.log(val)
       state.searchData = val
     };
     const changeTimePicker = (val) => {
