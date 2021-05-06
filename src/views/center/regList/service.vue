@@ -312,20 +312,19 @@ export default {
 
 <style lang="scss" scoped>
 .serviceStatus {
-  ::v-deep {
-    .el-table-filter {
+  ::v-deep(.el-table-filter) {
+
       .el-table-filter__list {
         height: 50px;
         overflow: auto;
       }
-    }
+
   }
 }
 
 .mapTable {
   .regMapTable {
-    ::v-deep {
-      .el-table__header-wrapper {
+    ::v-deep(.el-table__header-wrapper) {
         .el-table__header {
           tr {
             th {
@@ -346,7 +345,6 @@ export default {
               }
             }
           }
-        }
       }
       .el-table__body-wrapper {
         .el-table__row {

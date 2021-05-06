@@ -103,11 +103,9 @@ export default {
 .changeTableList {
   display: flex;
   .searchInput {
-    ::v-deep {
-      input {
-        border-radius: 15px;
-        border: 1px solid #2dad7d;
-      }
+    ::v-deep(input) {
+      border-radius: 15px;
+      border: 1px solid #2dad7d;
     }
   }
   .filterDate {
@@ -116,14 +114,16 @@ export default {
       margin-right: 8px;
       color: #6b7581;
     }
-    ::v-deep {
-      .el-range-separator {
+    ::v-deep(.el-range-separator) {
         width: 20px;
-      }
       .el-input__inner {
         width: 250px;
         border-radius: 15px;
       }
+    }
+    ::v-deep(.el-input__inner) {
+        width: 250px;
+        border-radius: 15px;
     }
   }
   .funtionBtnGroup {
@@ -141,8 +141,8 @@ export default {
       background-color: #ffffff;
       color: #2dae7d;
     }
-    ::v-deep {
-      .functionBtn span {
+    ::v-deep(.functionBtn) {
+      span {
         position: relative;
         top: -7px;
       }
