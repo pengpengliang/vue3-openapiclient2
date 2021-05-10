@@ -10,73 +10,77 @@
       <div class="personalCenterList">
         <ul>
           <li
-            :class="[{ active: moduleName == 'regList' }]"
-            @click="changeModule('regList')"
+            :class="[{ active: activeListName == 'regList' }]"
+            @click="changeListName('regList')"
           >
             <i class="el-icon-document-add" style="margin-right: 8px"></i>
             <span>注册列表</span>
           </li>
           <li
-            :class="[{ active: moduleName == 'applyList' }]"
-            @click="changeModule('applyList')"
+            :class="[{ active: activeListName == 'applyList' }]"
+            @click="changeListName('applyList')"
           >
             <svg-icon
               name="apply"
               size="14"
               style="margin-right: 8px"
-              :color="`${moduleName == 'applyList' ? '#fff' : '#000'}`"
+              :color="`${activeListName == 'applyList' ? '#fff' : '#000'}`"
             ></svg-icon>
             <span>申请列表</span>
           </li>
           <li
-            :class="[{ active: moduleName == 'approvalList' }]"
-            @click="changeModule('approvalList')"
+            :class="[{ active: activeListName == 'approvalList' }]"
+            @click="changeListName('approvalList')"
           >
             <svg-icon
               name="approvalTable"
               size="14"
               style="margin-right: 8px"
-              :color="`${moduleName == 'approvalList' ? '#fff' : '#000'}`"
+              :color="`${activeListName == 'approvalList' ? '#fff' : '#000'}`"
             ></svg-icon>
             <span>审批列表</span>
           </li>
           <li
-            :class="[{ active: moduleName == 'approvalRecord' }]"
-            @click="changeModule('approvalRecord')"
+            :class="[{ active: activeListName == 'approvalRecord' }]"
+            @click="changeListName('approvalRecord')"
           >
             <svg-icon
               name="approvalRecord"
               size="14"
               style="margin-right: 8px"
-              :color="`${moduleName == 'approvalRecord' ? '#fff' : '#000'}`"
+              :color="`${activeListName == 'approvalRecord' ? '#fff' : '#000'}`"
             ></svg-icon>
             <span>审批记录</span>
           </li>
         </ul>
       </div>
       <div class="personalCenterContent">
-        <RegList v-show="moduleName === 'regList'"></RegList>
-        <div v-show="moduleName === 'applyList'">申请列表</div>
-        <div v-show="moduleName === 'approvalList'">审批列表</div>
-        <div v-show="moduleName === 'approvalRecord'">审批记录</div>
+        <RegList v-show="activeListName === 'regList'"></RegList>
+        <div v-show="activeListName === 'applyList'">申请列表</div>
+        <div v-show="activeListName === 'approvalList'">审批列表</div>
+        <div v-show="activeListName === 'approvalRecord'">审批记录</div>
       </div>
     </div>
   </div>
 </template>
 
 <script>
+import { computed } from "vue";
+import { useStore } from 'vuex'
+import changeModule from '@/use/changeModule.js'
 import Header from "@/components/header";
 import RegList from "./regList/index"
-import { ref } from "vue";
 export default {
   setup() {
-    const moduleName = ref("regList");
-    const changeModule = name => {
-      moduleName.value = name;
-    };
+    const store = useStore()
+    const state = store.state.centerModule;
+    const activeListName = computed(()=>{
+      return state.activeList
+    });
+    let {changeListName} = changeModule();
     return {
-      changeModule,
-      moduleName
+      activeListName,
+      changeListName
     };
   },
   components: {

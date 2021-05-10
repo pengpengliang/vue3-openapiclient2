@@ -48,11 +48,12 @@
 </template>
 
 <script>
-import { reactive, toRefs } from "vue";
+import {  reactive, toRefs } from "vue";
+import filterTableData from '@/use/filterTableData.js'
 export default {
-  setup(props, context) {
+  setup() {
     const state = reactive({
-      searchValue: "",
+      searchValue: '',
       timePickerValue: [],
       shortcuts: [
         {
@@ -84,12 +85,7 @@ export default {
         },
       ],
     });
-    const changeSearchValue = (value) => {
-      context.emit("changeSearchValue", value);
-    };
-    const changeTimePicker = (value) => {
-      context.emit("changeTimePicker", value);
-    };
+    let {changeSearchValue,changeTimePicker} = filterTableData();
     return {
       ...toRefs(state),
       changeSearchValue,

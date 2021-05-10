@@ -4,7 +4,7 @@
  * @LastEditors: liangzhanpeng
  */
 import { createStore } from "vuex";
-
+import centerModule from './module/center'
 export default createStore({
   state: {
     hasToken: false
@@ -15,5 +15,7 @@ export default createStore({
     }
   },
   actions: {},
-  modules: {}
+  modules: {
+    centerModule
+  }
 });

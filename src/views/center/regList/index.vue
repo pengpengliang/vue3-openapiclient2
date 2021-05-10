@@ -6,57 +6,28 @@
 <template>
   <div class="registerResource">
     <div class="filterList">
-      <CenterSwitchModule @changeModuleName="changeModuleName" />
-      <CenterSearchInput
-        @changeSearchValue="changeSearchValue"
-        @changeTimePicker="changeTimePicker"
-      />
+      <CenterSwitchModule />
+      <CenterSearchInput />
     </div>
-    <service :timeData="timeData" :searchData="searchData"/>
+    <service v-show="activeModule == 'map'"/>
   </div>
 </template>
 
 <script>
+import { computed } from "vue";
+import { useStore } from 'vuex'
 import CenterSwitchModule from "@/components/centerSwitchModule";
 import CenterSearchInput from "@/components/centerSearchInput";
-import {getDate} from "@/utils/common.js";
-import { reactive, toRefs } from 'vue';
 import Service from './service.vue';
 export default {
   setup() {
-    const state = reactive({
-      moduleName: '',
-      timeData: [],
-      searchData: ''
-    })
-    const changeModuleName = (moduleName) => {
-      state.moduleName = moduleName
-    };
-    const changeSearchValue = (val) => {
-      console.log(val)
-      state.searchData = val
-    };
-    const changeTimePicker = (val) => {
-      if (val && val.length > 0) {
-        //改个格式
-        val.map((item,index) => {
-          let dd = {
-            date: item,
-            format: "yyyy/MM/dd",
-          };
-          let d = getDate(dd);
-          val[index] = d;
-        });
-        state.timeData = val
-      } else {
-        state.timeData = []
-      }
-    };
+    const store = useStore()
+    const state = store.state.centerModule
+    const activeModule = computed(()=>{
+      return state.activeModule
+    });
     return {
-      ...toRefs(state),
-      changeModuleName,
-      changeSearchValue,
-      changeTimePicker,
+      activeModule
     };
   },
   components: {

@@ -11,7 +11,7 @@
       stripe
       style="width: 100%"
       @row-click="handleRowClick"
-      @filter-change="filterChange"
+      @filter-change="changeOptions"
     >
       <el-table-column
         prop="index"
@@ -25,7 +25,6 @@
         label="服务主题"
         :filters="serviceTheme"
         :filter-multiple="false"
-        :filter-method="handleServiceThemeFilter"
         column-key="theme"
       ></el-table-column>
       <el-table-column prop="registerdate" label="注册时间"></el-table-column>
@@ -34,7 +33,6 @@
         label="服务状态"
         :filters="publishStatus"
         :filter-multiple="false"
-        :filter-method="handlePublishStatusFilter"
         :class-name="'serviceStatus'"
         column-key="service"
       >
@@ -48,7 +46,6 @@
         label="审核状态"
         :filters="auditStatus"
         :filter-multiple="false"
-        :filter-method="handleAuditStatusFilter"
         column-key="audit"
       >
         <template #default="scope">
@@ -74,10 +71,10 @@
             class="operation-button"
             v-if="
               (scope.row.curactid === 'A005' || scope.row.curactid == null) &&
-                scope.row.usemapproxy == 1 &&
-                scope.row.isshared !== 3 &&
-                scope.row.isshared !== 2 &&
-                scope.row.usemapproxy == 1
+              scope.row.usemapproxy == 1 &&
+              scope.row.isshared !== 3 &&
+              scope.row.isshared !== 2 &&
+              scope.row.usemapproxy == 1
             "
             @click.stop.prevent="update(scope.$index, tableData)"
             type="text"
@@ -88,7 +85,7 @@
             class="operation-button"
             v-if="
               (scope.row.curactid === 'A005' || scope.row.curactid == null) &&
-                (scope.row.isshared === 1 || scope.row.isshared === 4)
+              (scope.row.isshared === 1 || scope.row.isshared === 4)
             "
             @click.stop.prevent="start(scope.$index, tableData)"
             type="text"
@@ -102,8 +99,8 @@
             class="operation-button"
             v-if="
               (scope.row.curactid !== 'A003' || scope.row.curactid == null) &&
-                scope.row.isshared !== 2 &&
-                scope.row.isshared !== 3
+              scope.row.isshared !== 2 &&
+              scope.row.isshared !== 3
             "
             @click.stop.prevent="deleteRow(scope.$index, tableData)"
             type="text"
@@ -127,23 +124,20 @@
         layout="total, prev, pager, next"
         :current-page="pageindex"
         :total="total"
-        :page-size="pagesize"
-        @current-change="handleCurrentChange"
+        page-size="10"
+        @current-change="changePageIndex"
       ></el-pagination>
     </div>
   </div>
 </template>
 
 <script>
-import { onMounted, reactive, toRefs, watch } from "vue";
+import { onMounted, reactive, toRefs } from "vue";
+import { computed } from "vue";
+import { useStore } from "vuex";
 import { ElMessageBox } from "element-plus";
-import {
-  getAuditStatus,
-  auditStatus,
-  getPublishStatus,
-  publishStatus,
-} from "@/utils/common.js";
-
+import Common from "@/utils/common.js";
+import filterTableData from "@/use/filterTableData.js";
 import api from "@/api/index.js";
 export default {
   props: {
@@ -156,114 +150,54 @@ export default {
       default: "",
     },
   },
-  setup(props) {
-    const state = reactive({
-      tableData: [],
-      serviceTheme: [], //服务主题数据
-      selectedServiceTheme: null, //选中的服务主题
-      publishStatus: publishStatus,
-      selectedServiceStatus: null, //选中的服务状态
-      auditStatus: auditStatus,
-      selectedApproveStatus: null, //选中的审批状态
-      pageindex: 1,
-      pagesize: 10,
-      total: 0,
+  setup() {
+    const store = useStore();
+    // 表格相关筛选方法 分页方法
+    const { changePageIndex, changeOptions } = filterTableData();
+    // 表格筛选数据
+    const {
+      getAuditStatus,
+      auditStatus,
+      getPublishStatus,
+      publishStatus,
+    } = Common();
+
+    const tableData = computed(() => {
+      return store.state.centerModule.regMapTableData;
     });
+    const total = computed(() => {
+      return store.state.centerModule.regMapTableDataCount;
+    });
+    const pageindex = computed(() => {
+      return store.state.centerModule.pageIndex;
+    });
+
+    const state = reactive({
+      serviceTheme: [], //服务主题数据
+    });
+
     onMounted(async () => {
-      let obj = {
-        pageindex: state.pageindex,
-        pagesize: state.pagesize,
-      };
+      store.dispatch("getTableData", {
+        type: "refresh",
+      });
       const serviceTheme = await api.center.getResourceTree(); //服务主题数据
       state.serviceTheme = serviceTheme;
-      getMyResources(obj);
     });
-    watch(
-      [() => props.timeData, () => props.searchData],
-      ([newTime, newSearch]) => {
-        let obj = {
-          isshared: state.selectedServiceStatus,
-          resourcetreeid: state.selectedServiceTheme,
-          curactid: state.selectedApproveStatus,
-          pageindex: 1,
-          pagesize: state.pagesize,
-          name: newSearch,
-          starttime: newTime && newTime.length > 0 ? newTime[0] : null,
-          endtime: newTime && newTime.length > 0 ? newTime[1] : null,
-        };
-        getMyResources(obj);
-      }
-    );
-    const getMyResources = async (params) => {
-      const myResourcesData = await api.center.getMyResources(params); //列表数据
-      state.tableData = myResourcesData.objects;
-      state.total = myResourcesData.count;
-    };
+
     const methods = {
-      filterChange(filters) {
-        state.pageindex = 1;
-        if (filters.service) {
-          state.selectedServiceStatus = filters.service[0]
-            ? filters.service[0]
-            : null;
-        } else if (filters.theme) {
-          state.selectedServiceTheme = filters.theme[0]
-            ? filters.theme[0]
-            : null;
-        } else if (filters.audit) {
-          state.selectedApproveStatus = filters.audit[0]
-            ? filters.audit[0]
-            : null;
-        }
-        let obj = {
-          isshared: filters.service
-            ? filters.service[0]
-            : state.selectedServiceStatus,
-          resourcetreeid: filters.theme
-            ? filters.theme[0]
-            : state.selectedServiceTheme,
-          curactid: filters.audit
-            ? filters.audit[0]
-            : state.selectedApproveStatus,
-          pageindex: 1,
-          pagesize: state.pagesize,
-          name: props.searchData,
-          starttime:
-            props.timeData && props.timeData.length > 0
-              ? props.timeData[0]
-              : null,
-          endtime:
-            props.timeData && props.timeData.length > 0
-              ? props.timeData[1]
-              : null,
-        };
-        getMyResources(obj);
-      },
       handleRowClick() {
         console.log(123);
-      },
-      handleServiceThemeFilter() {
-        return true;
-      },
-      handlePublishStatusFilter() {
-        return true;
-      },
-      handleAuditStatusFilter() {
-        return true;
       },
       update() {},
       async start(index, rows) {
         let operation = rows[index].isshared === 4 ? "启用" : "停用";
         let data = {
-          resourceId: rows[index].resourceid
+          resourceId: rows[index].resourceid,
         };
-        await api.center.changeIsShared(data,operation);
-        let obj = {
-          pageindex: 1,
-          pagesize: state.pagesize,
-        };
-        state.pageindex = 1;
-        getMyResources(obj);
+        await api.center.changeIsShared(data, operation);
+        store.dispatch("getTableData", {
+          type: "refresh",
+        });
       },
       deleteRow(index, rows) {
         ElMessageBox.confirm("是否要删除该服务？", "确认信息", {
@@ -275,37 +209,27 @@ export default {
             resourceid: rows[index].resourceid,
           };
           await api.center.deleteResource(data);
-          let obj = {
-            pageindex: 1,
-            pagesize: state.pagesize,
-          };
-          state.pageindex = 1;
-          getMyResources(obj);
+          store.dispatch("getTableData", {
+            type: "refresh",
+          });
         });
       },
       updateResources() {},
-      handleCurrentChange(currentPage) {
-        state.pageindex = currentPage;
-        let obj = {
-          isshared: state.selectedServiceStatus,
-          resourcetreeid: state.selectedServiceTheme,
-          curactid: state.selectedApproveStatus,
-          pageindex: currentPage,
-          pagesize: state.pagesize,
-          name: props.searchData,
-          starttime:
-            props.timeData && props.timeData.length > 0
-              ? props.timeData[0]
-              : null,
-          endtime:
-            props.timeData && props.timeData.length > 0
-              ? props.timeData[1]
-              : null,
-        };
-        getMyResources(obj);
-      },
     };
-    return { ...toRefs(state), ...methods, getAuditStatus, getPublishStatus };
+
+    return {
+      tableData,
+      total,
+      changePageIndex,
+      changeOptions,
+      pageindex,
+      ...toRefs(state),
+      ...methods,
+      getAuditStatus,
+      getPublishStatus,
+      auditStatus,
+      publishStatus,
+    };
   },
 };
 </script>
@@ -313,38 +237,36 @@ export default {
 <style lang="scss" scoped>
 .serviceStatus {
   ::v-deep(.el-table-filter) {
-
-      .el-table-filter__list {
-        height: 50px;
-        overflow: auto;
-      }
-
+    .el-table-filter__list {
+      height: 50px;
+      overflow: auto;
+    }
   }
 }
 
 .mapTable {
   .regMapTable {
     ::v-deep(.el-table__header-wrapper) {
-        .el-table__header {
-          tr {
-            th {
-              background-color: #f8f9ff;
-              color: #6b7581;
-              .blueFont {
-                color: #2dae7d;
-              }
-              .el-select {
-                position: absolute;
-                width: 50px;
-              }
-              .el-input__inner {
-                visibility: hidden;
-              }
-              .el-input__suffix {
-                visibility: hidden;
-              }
+      .el-table__header {
+        tr {
+          th {
+            background-color: #f8f9ff;
+            color: #6b7581;
+            .blueFont {
+              color: #2dae7d;
+            }
+            .el-select {
+              position: absolute;
+              width: 50px;
+            }
+            .el-input__inner {
+              visibility: hidden;
+            }
+            .el-input__suffix {
+              visibility: hidden;
             }
           }
+        }
       }
       .el-table__body-wrapper {
         .el-table__row {

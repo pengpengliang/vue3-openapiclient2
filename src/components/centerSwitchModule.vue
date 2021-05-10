@@ -7,19 +7,19 @@
   <div class="toggleModule">
     <div
       :class="['moduleItem', { activeModule: activeModule === 'map' }]"
-      @click="changeModule('map')"
+      @click="changeModuleName('map')"
     >
       地图服务
     </div>
     <div
       :class="['moduleItem', { activeModule: activeModule === 'interface' }]"
-      @click="changeModule('interface')"
+      @click="changeModuleName('interface')"
     >
       接口资源
     </div>
     <div
       :class="['moduleItem', { activeModule: activeModule === 'data' }]"
-      @click="changeModule('data')"
+      @click="changeModuleName('data')"
     >
       数据资源
     </div>
@@ -27,18 +27,20 @@
 </template>
 
 <script>
-import { ref } from "vue";
+import { computed } from "vue";
+import { useStore } from 'vuex'
+import changeModule from '@/use/changeModule.js'
 export default {
-  setup(props,context) {
-    console.log(props,context)
-    const activeModule = ref("map");
-    const changeModule = (moduleName) => {
-      activeModule.value = moduleName;
-      context.emit("changeModuleName", moduleName)
-    };
+  setup() {
+    const store = useStore()
+    const state = store.state.centerModule
+    const activeModule = computed(()=>{
+      return state.activeModule
+    });
+    let {changeModuleName} = changeModule();
     return {
       activeModule,
-      changeModule
+      changeModuleName
     };
   },
 };
